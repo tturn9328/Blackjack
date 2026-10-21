@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blackjack Tracker Pro with I18 & Seat History</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-yellow: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 12px;
+            max-width: 480px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-icon {
+            background: #e2e8f0;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        /* Insurance Warning Banner */
+        #insurance-banner {
+            display: none;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* Status Board */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .card-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .card-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .meta-info {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            font-size: 0.82rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meta-info span {
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        /* Card Counting Input Buttons */
+        .count-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .btn-count {
+            padding: 12px 6px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn-low { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .btn-neut { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-high { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+
+        .btn-count span:first-child { font-size: 0.8rem; font-weight: 600; }
+        .btn-count span:last-child { font-size: 1.1rem; margin-top: 2px; }
+
+        /* Seat & History Row */
+        .section-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .seat-selector {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .seat-btn {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .seat-btn.active {
+            background: var(--text-main);
+            color: white;
+            border-color: var(--text-main);
+        }
+
+        .history-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        /* Burn/Adjust Controls */
+        .burn-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .burn-input {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .btn-action {
+            background: #e2e8f0;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Live Decision Assistant */
+        .assistant-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .select-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .select-wrapper label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: #f8fafc;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .recommendation-box {
+            background: #f0fdf4;
+            border: 2px solid var(--accent-green);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .recommendation-box.split-rec {
+            background: #f5f3ff;
+            border-color: var(--accent-purple);
+        }
+
+        .rec-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #047857;
+        }
+
+        .split-rec .rec-label {
+            color: #6d28d9;
+        }
+
+        .rec-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #065f46;
+            margin-top: 2px;
+        }
+
+        .split-rec .rec-value {
+            color: #5b21b6;
+        }
+
+        .deviation-badge {
+            margin-top: 6px;
+            display: inline-block;
+            background: #fef3c7;
+            color: #b45309;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* Footer Reset */
+        .footer-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-reset {
+            flex: 1;
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-undo {
+            background: #cbd5e1;
+            color: #1e293b;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Modal Overlay */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            max-height: 80vh;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .modal-header h2 { font-size: 1.1rem; }
+
+        .modal-body p, .modal-body li {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .modal-body ul { padding-left: 18px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Blackjack Tracker</h1>
+        <button class="btn-icon" onclick="toggleModal(true)">Rules & I18</button>
+    </header>
+
+    <div id="insurance-banner">⚠️ TRUE COUNT LOW: NO INSURANCE</div>
+
+    <div class="status-grid">
+        <div class="card">
+            <div class="card-label">Running Total</div>
+            <div class="card-value" id="running-total">0</div>
+        </div>
+        <div class="card">
+            <div class="card-label">True Count</div>
+            <div class="card-value" id="true-count">0.0</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Decks Remaining</div>
+            <div class="card-value" id="decks-remaining">8.0</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Recommended Bet</div>
+            <div class="card-value" id="recommended-bet">$10</div>
+        </div>
+    </div>
+
+    <div class="meta-info">
+        <div>Active Position: <span id="active-seat">Seat 1</span></div>
+        <div>Cards Left: <span id="cards-left">416</span></div>
+    </div>
+
+    <!-- Counting Action Buttons -->
+    <div class="count-buttons">
+        <button class="btn-count btn-low" onclick="recordCardGroup('low')">
+            <span>Low (2-6)</span>
+            <span>+1</span>
+        </button>
+        <button class="btn-count btn-neut" onclick="recordCardGroup('neut')">
+            <span>Neut (7-9)</span>
+            <span>0</span>
+        </button>
+        <button class="btn-count btn-high" onclick="recordCardGroup('high')">
+            <span>High (10-A)</span>
+            <span>-1</span>
+        </button>
+    </div>
+
+    <!-- Seat Tracker & History -->
+    <div class="section-box">
+        <div class="section-title">
+            <span>Seat Tracker</span>
+            <span id="table-min-label">Min: $10</span>
+        </div>
+        <div class="seat-selector" id="seat-container">
+            <button class="seat-btn active" onclick="setSeat(1)">Seat 1</button>
+            <button class="seat-btn" onclick="setSeat(2)">Seat 2</button>
+            <button class="seat-btn" onclick="setSeat(3)">Seat 3</button>
+            <button class="seat-btn" onclick="setSeat(4)">Seat 4</button>
+            <button class="seat-btn" onclick="setSeat(5)">Seat 5</button>
+            <button class="seat-btn" onclick="setSeat(6)">Seat 6</button>
+            <button class="seat-btn" onclick="setSeat(7)">Seat 7</button>
+            <button class="seat-btn" onclick="setSeat(8)">Seat 8</button>
+            <button class="seat-btn" onclick="setSeat('Dealer')">Dealer</button>
+        </div>
+        <div class="history-text" id="history-log">Last Action: Shoe & Seats Fully Reset</div>
+    </div>
+
+    <!-- Burn & Deck Adjustment -->
+    <div class="section-box">
+        <div class="section-title">Local Shoe Adjustments</div>
+        <div class="burn-row">
+            <input type="number" id="burn-input" class="burn-input" placeholder="e.g. 1" min="1" max="52">
+            <button class="btn-action" onclick="burnCards()">Burn Cards</button>
+            <button class="btn-action" onclick="adjustDeckCount()">Subtract Deck</button>
+        </div>
+    </div>
+
+    <!-- Live Decision Assistant -->
+    <div class="assistant-box">
+        <div class="section-title">Live Decision Assistant (I18 & Fab 4 & DAS Loaded)</div>
+        <div class="select-group">
+            <div class="select-wrapper">
+                <label>Your Hand / Pair</label>
+                <select id="player-hand" onchange="calculateDecision()">
+                    <option value="AA">Pair: Aces (A,A)</option>
+                    <option value="1010">Pair: Tens (10,10)</option>
+                    <option value="99">Pair: Nines (9,9)</option>
+                    <option value="88">Pair: Eights (8,8)</option>
+                    <option value="77">Pair: Sevens (7,7)</option>
+                    <option value="66">Pair: Sixes (6,6)</option>
+                    <option value="55">Pair: Fives (5,5)</option>
+                    <option value="44">Pair: Fours (4,4)</option>
+                    <option value="33">Pair: Threes (3,3)</option>
+                    <option value="22">Pair: Twos (2,2)</option>
+                    <option value="soft20">Soft 20 (A,9)</option>
+                    <option value="soft19">Soft 19 (A,8)</option>
+                    <option value="soft18">Soft 18 (A,7)</option>
+                    <option value="soft17">Soft 17 (A,6)</option>
+                    <option value="soft16">Soft 16 (A,5)</option>
+                    <option value="soft15">Soft 15 (A,4)</option>
+                    <option value="soft14">Soft 14 (A,3)</option>
+                    <option value="soft13">Soft 13 (A,2)</option>
+                    <option value="21">21 / Hard 17+</option>
+                    <option value="16">Hard 16</option>
+                    <option value="15">Hard 15</option>
+                    <option value="14">Hard 14</option>
+                    <option value="13">Hard 13</option>
+                    <option value="12">Hard 12</option>
+                    <option value="11">Hard 11</option>
+                    <option value="10">Hard 10</option>
+                    <option value="9">Hard 9</option>
+                    <option value="8">Hard 8 or less</option>
+                </select>
+            </div>
+            <div class="select-wrapper">
+                <label>Dealer Upcard</label>
+                <select id="dealer-upcard" onchange="calculateDecision()">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10 / Face</option>
+                    <option value="11">Ace</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="recommendation-box" id="rec-box">
+            <div class="rec-label" id="rec-label">Recommended Move</div>
+            <div class="rec-value" id="rec-value">HIT</div>
+            <div id="deviation-badge" class="deviation-badge" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="footer-controls">
+        <button class="btn-undo" onclick="undoAction()">Undo</button>
+        <button class="btn-reset" onclick="resetShoe()">Reset Shoe</button>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="modal-overlay" onclick="toggleModal(false)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Illustrious 18 & Pair Splitting</h2>
+                <button class="btn-icon" onclick="toggleModal(false)">Close</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Hi-Lo Counting System:</strong> Low cards (2-6) = +1, Neutral (7-9) = 0, High (10-A) = -1. True Count = Running Count divided by estimated decks remaining.</p>
+                <p><strong>Key Illustrious 18 Deviations Built-In:</strong></p>
+                <ul>
+                    <li>Insurance: Take if TC ≥ +3</li>
+                    <li>16 vs 10: Stand if TC ≥ 0</li>
+                    <li>15 vs 10: Stand if TC ≥ +4 (Surrender if TC ≥ 0)</li>
+                    <li>12 vs 3: Stand if TC ≥ +2</li>
+                    <li>12 vs 2: Stand if TC ≥ +3</li>
+                    <li>10 vs 10: Double if TC ≥ +4</li>
+                    <li>Pair 10s vs 5: Split if TC ≥ +5</li>
+                    <li>Pair 10s vs 6: Split if TC ≥ +4</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let runningTotal = 0;
+        let totalCardsDealt = 0;
+        let totalDecksInShoe = 8;
+        let tableMin = 10;
+        let currentSeat = "Seat 1";
+        let historyStack = [];
+
+        function saveState() {
+            historyStack.push({
+                runningTotal,
+                totalCardsDealt,
+                totalDecksInShoe,
+                currentSeat,
+                logText: document.getElementById('history-log').innerText
+            });
+        }
+
+        function recordCardGroup(type) {
+            saveState();
+            let change = 0;
+            let cardsCounted = 1;
+            if (type === 'low') { runningTotal += 1; change = +1; }
+            else if (type === 'high') { runningTotal -= 1; change = -1; }
+
+            totalCardsDealt += cardsCounted;
+            
+            let actionName = type === 'low' ? 'Low (+1)' : type === 'high' ? 'High (-1)' : 'Neut (0)';
+            updateLog(`${currentSeat}: Recorded ${actionName}`);
+            updateDisplay();
+        }
+
+        function setSeat(seatNum) {
+            currentSeat = typeof seatNum === 'number' ? `Seat ${seatNum}` : seatNum;
+            document.querySelectorAll('.seat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === currentSeat);
+            });
+            document.getElementById('active-seat').innerText = currentSeat;
+        }
+
+        function burnCards() {
+            let val = parseInt(document.getElementById('burn-input').value);
+            if (isNaN(val) || val <= 0) return;
+            saveState();
+            totalCardsDealt += val;
+            updateLog(`Burned ${val} card(s)`);
+            document.getElementById('burn-input').value = '';
+            updateDisplay();
+        }
+
+        function adjustDeckCount() {
+            if (totalDecksInShoe > 1) {
+                saveState();
+                totalDecksInShoe -= 1;
+                updateLog(`Removed 1 deck from calculation`);
+                updateDisplay();
+            }
+        }
+
+        function updateLog(msg) {
+            document.getElementById('history-log').innerText = `Last Action: ${msg}`;
+        }
+
+        function updateDisplay() {
+            document.getElementById('running-total').innerText = runningTotal;
+            
+            let totalCardsInShoe = totalDecksInShoe * 52;
+            let cardsRemaining = Math.max(0, totalCardsInShoe - totalCardsDealt);
+            let decksRemaining = Math.max(0.5, (cardsRemaining / 52).toFixed(1));
+            
+            document.getElementById('decks-remaining').innerText = decksRemaining;
+            document.getElementById('cards-left').innerText = cardsRemaining;
+
+            let trueCount = (runningTotal / decksRemaining).toFixed(1);
+            document.getElementById('true-count').innerText = trueCount;
+
+            // Recommended Bet calculation
+            let recBet = tableMin;
+            let tcNum = parseFloat(trueCount);
+            if (tcNum >= 2) recBet = tableMin * Math.min(8, Math.floor(tcNum) * 2);
+            document.getElementById('recommended-bet').innerText = `$${recBet}`;
+
+            // Insurance Warning
+            let banner = document.getElementById('insurance-banner');
+            if (tcNum >= 3) {
+                banner.style.display = 'block';
+                banner.innerText = `🛡️ TRUE COUNT HIGH (+${tcNum}): TAKE INSURANCE`;
+                banner.style.background = '#d1fae5';
+                banner.style.borderColor = '#10b981';
+                banner.style.color = '#065f46';
+            } else {
+                banner.style.display = 'none';
+            }
+
+            calculateDecision();
+        }
+
+        function calculateDecision() {
+            let hand = document.getElementById('player-hand').value;
+            let dealer = parseInt(document.getElementById('dealer-upcard').value);
+            let tc = parseFloat((runningTotal / Math.max(0.5, parseFloat(document.getElementById('decks-remaining').innerText))).toFixed(1));
+
+            let move = "HIT";
+            let deviationText = "";
+            let isSplit = false;
+
+            // --- PAIR STRATEGY & DEVIATIONS ---
+            if (hand === 'AA' || hand === '88') { move = "SPLIT"; isSplit = true; }
+            else if (hand === '1010') {
+                if (dealer === 5 && tc >= 5) { move = "SPLIT"; isSplit = true; deviationText = "I18 #4: Split 10s vs 5 (TC ≥ +5)"; }
+                else if (dealer === 6 && tc >= 4) { move = "SPLIT"; isSplit = true; deviationText = "I18 #5: Split 10s vs 6 (TC ≥ +4)"; }
+                else { move = "STAND"; }
+            }
+            else if (hand === '99') {
+                if ([7, 10, 11].includes(dealer)) { move = "STAND"; }
+                else { move = "SPLIT"; isSplit = true; }
+            }
+            else if (['77', '33', '22'].includes(hand)) {
+                if (dealer >= 2 && dealer <= 7) { move = "SPLIT"; isSplit = true; }
+            }
+            else if (hand === '66') {
+                if (dealer >= 2 && dealer <= 6) { move = "SPLIT"; isSplit = true; }
+            }
+            else if (hand === '44') {
+                if (dealer >= 5 && dealer <= 6) { move = "SPLIT"; isSplit = true; }
+            }
+            else if (hand === '55') {
+                // Treated as hard 10
+                move = (dealer <= 9) ? "DOUBLE" : "HIT";
+            }
+            // --- HARD TOTALS & DEVIATIONS ---
+            else if (hand === '16') {
+                if (dealer === 10 && tc >= 0) { move = "STAND"; deviationText = "I18 #2: Stand 16 vs 10 (TC ≥ 0)"; }
+                else if (dealer === 9 && tc >= 5) { move = "STAND"; deviationText = "I18 #13: Stand 16 vs 9 (TC ≥ +5)"; }
+                else if (dealer >= 9) { move = "HIT"; }
+                else { move = "STAND"; }
+            }
+            else if (hand === '15') {
+                if (dealer === 10) {
+                    if (tc >= 4) { move = "STAND"; deviationText = "I18 #3: Stand 15 vs 10 (TC ≥ +4)"; }
+                    else if (tc >= 0) { move = "SURRENDER"; deviationText = "Fab 4: Surrender 15 vs 10 (TC ≥ 0)"; }
+                    else { move = "HIT"; }
+                } else if (dealer === 9 && tc >= 2) {
+                    move = "SURRENDER"; deviationText = "Fab 4: Surrender 15 vs 9 (TC ≥ +2)";
+                } else if (dealer === 11 && tc >= 1) {
+                    move = "SURRENDER"; deviationText = "Fab 4: Surrender 15 vs Ace (TC ≥ +1)";
+                } else {
+                    move = (dealer <= 6) ? "STAND" : "HIT";
+                }
+            }
+            else if (hand === '14') {
+                if (dealer === 10 && tc >= 3) { move = "SURRENDER"; deviationText = "Fab 4: Surrender 14 vs 10 (TC ≥ +3)"; }
+                else { move = (dealer <= 6) ? "STAND" : "HIT"; }
+            }
+            else if (hand === '13') {
+                if (dealer >= 2 && dealer <= 3 && tc <= -2) { move = "HIT"; deviationText = "I18 #18: Hit 13 vs 3 (TC ≤ -2)"; }
+                else if (dealer === 2 && tc <= -1) { move = "HIT"; deviationText = "I18 #14: Hit 13 vs 2 (TC ≤ -1)"; }
+                else { move = (dealer <= 6) ? "STAND" : "HIT"; }
+            }
+            else if (hand === '12') {
+                if (dealer === 3 && tc >= 2) { move = "STAND"; deviationText = "I18 #7: Stand 12 vs 3 (TC ≥ +2)"; }
+                else if (dealer === 2 && tc >= 3) { move = "STAND"; deviationText = "I18 #8: Stand 12 vs 2 (TC ≥ +3)"; }
+                else if (dealer === 4 && tc < 0) { move = "HIT"; deviationText = "I18 #15: Hit 12 vs 4 (TC < 0)"; }
+                else if (dealer === 5 && tc <= -2) { move = "HIT"; deviationText = "I18 #16: Hit 12 vs 5 (TC ≤ -2)"; }
+                else if (dealer === 6 && tc <= -1) { move = "HIT"; deviationText = "I18 #17: Hit 12 vs 6 (TC ≤ -1)"; }
+                else { move = (dealer >= 4 && dealer <= 6) ? "STAND" : "HIT"; }
+            }
+            else if (hand === '11') {
+                if (dealer === 11 && tc >= 1) { move = "DOUBLE"; deviationText = "I18 #9: Double 11 vs Ace (TC ≥ +1)"; }
+                else { move = "DOUBLE"; }
+            }
+            else if (hand === '10') {
+                if (dealer === 10 && tc >= 4) { move = "DOUBLE"; deviationText = "I18 #6: Double 10 vs 10 (TC ≥ +4)"; }
+                else if (dealer === 11 && tc >= 4) { move = "DOUBLE"; deviationText = "I18 #11: Double 10 vs Ace (TC ≥ +4)"; }
+                else { move = (dealer <= 9) ? "DOUBLE" : "HIT"; }
+            }
+            else if (hand === '9') {
+                if (dealer === 2 && tc >= 1) { move = "DOUBLE"; deviationText = "I18 #10: Double 9 vs 2 (TC ≥ +1)"; }
+                else if (dealer === 7 && tc >= 3) { move = "DOUBLE"; deviationText = "I18 #12: Double 9 vs 7 (TC ≥ +3)"; }
+                else { move = (dealer >= 3 && dealer <= 6) ? "DOUBLE" : "HIT"; }
+            }
+            else if (hand === '8' || hand === '8 or less') { move = "HIT"; }
+            else if (hand.startsWith('soft')) {
+                move = (dealer >= 5 && dealer <= 6) ? "DOUBLE" : "HIT";
+            }
+
+            let recBox = document.getElementById('rec-box');
+            let recValue = document.getElementById('rec-value');
+            let badge = document.getElementById('deviation-badge');
+
+            recValue.innerText = move;
+            if (isSplit || move === 'SPLIT') {
+                recBox.className = "recommendation-box split-rec";
+            } else {
+                recBox.className = "recommendation-box";
+            }
+
+            if (deviationText) {
+                badge.style.display = 'inline-block';
+                badge.innerText = `★ ${deviationText}`;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function undoAction() {
+            if (historyStack.length === 0) return;
+            let last = historyStack.pop();
+            runningTotal = last.runningTotal;
+            totalCardsDealt = last.totalCardsDealt;
+            totalDecksInShoe = last.totalDecksInShoe;
+            currentSeat = last.currentSeat;
+            document.getElementById('history-log').innerText = last.logText;
+            document.querySelectorAll('.seat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === currentSeat);
+            });
+            document.getElementById('active-seat').innerText = currentSeat;
+            updateDisplay();
+        }
+
+        function resetShoe() {
+            if (confirm("Reset shoe and all counts?")) {
+                saveState();
+                runningTotal = 0;
+                totalCardsDealt = 0;
+                totalDecksInShoe = 8;
+                updateLog("Shoe & Seats Fully Reset");
+                updateDisplay();
+            }
+        }
+
+        function toggleModal(show) {
+            document.getElementById('modal-overlay').style.display = show ? 'flex' : 'none';
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
